@@ -1,5 +1,5 @@
-benchmark
-src
-node_modules
-.gitignore
-*.json
+*
+!dist
+!README.md
+!LICENSE
+!package.json
