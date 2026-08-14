@@ -1,6 +1,6 @@
 {
   "name": "weighted-sampler",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A zero-dependency library for weighted sampling using Walker's alias method.",
   "keywords": [
     "algorithm",
