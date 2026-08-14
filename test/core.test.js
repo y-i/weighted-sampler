@@ -4,9 +4,10 @@ import { describe, test } from "node:test";
 import { sample, sampleMany, tryCreateWeightedSampler } from "weighted-sampler/core";
 
 describe("tryCreateWeightedSampler", () => {
-  test("creates an alias table from separate values and weights", () => {
+  test("creates an alias table from separate values and weights when zero weights are allowed", () => {
     let randomFnCalls = 0;
     const result = tryCreateWeightedSampler(["never", "always"], [0, 1], {
+      allowZeroWeights: true,
       randomFn: () => {
         randomFnCalls += 1;
         return 0.5;
@@ -22,13 +23,13 @@ describe("tryCreateWeightedSampler", () => {
     assert.equal(randomFnCalls, 1);
   });
 
-  test("creates an alias table from weighted value objects", () => {
+  test("creates an alias table from weighted value objects when zero weights are allowed", () => {
     const result = tryCreateWeightedSampler(
       [
         { value: "never", weight: 0 },
         { value: "always", weight: 1 },
       ],
-      { randomFn: () => 0.999_999 },
+      { allowZeroWeights: true, randomFn: () => 0.999_999 },
     );
 
     assert.equal(result.ok, true);
@@ -37,6 +38,16 @@ describe("tryCreateWeightedSampler", () => {
     }
 
     assert.equal(sample(result.value), "always");
+  });
+
+  test("returns an invalid weights error when zero weights are not allowed", () => {
+    assert.deepEqual(
+      tryCreateWeightedSampler(["never", "always"], [0, 1], { allowZeroWeights: false }),
+      {
+        ok: false,
+        error: "Invalid weights",
+      },
+    );
   });
 
   test("returns a length inconsistency error", () => {

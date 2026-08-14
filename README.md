@@ -50,6 +50,19 @@ const sampler = createWeightedSampler(["heads", "tails"], [1, 1], {
 });
 ```
 
+Zero weights are accepted by default. Set `allowZeroWeights: false` to reject any zero
+weight:
+
+```js
+const sampler = createWeightedSampler(["available", "disabled"], [1, 0], {
+  allowZeroWeights: false,
+});
+```
+
+In this example, `createWeightedSampler()` throws a `CreateWeightedSamplerError` because
+the second weight is zero. With the functional API, `tryCreateWeightedSampler()` returns
+`{ ok: false, error: "Invalid weights" }` instead.
+
 ### Functional API
 
 The core entry point exposes the alias table and sampling operations separately.

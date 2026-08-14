@@ -9,9 +9,20 @@ export type CreateWeightedSamplerResult<T> =
   | { ok: true; value: AliasTable<T> }
   | { ok: false; error: "Length inconsistency" | "Invalid weights" | "Invalid args" };
 
+/**
+ * Options for creating a weighted sampler.
+ * randomFn: A custom random number generator function. If not provided, Math.random will be used.
+ * allowZeroWeights: If true, allows weights to be zero. If false, zero weights will cause an error. Default is true.
+ */
 export type SamplerOptions = {
   randomFn?: () => number;
+  allowZeroWeights?: boolean;
 };
+
+const DEFAULT_OPTIONS: Required<SamplerOptions> = {
+  randomFn: Math.random,
+  allowZeroWeights: true,
+} as const;
 
 export function tryCreateWeightedSampler<T>(
   values: readonly T[],
@@ -27,11 +38,13 @@ export function tryCreateWeightedSampler<T>(...args: any[]): CreateWeightedSampl
     return { ok: false, error: "Invalid args" };
   }
 
-  let options = args.pop();
-  if (Array.isArray(options)) {
-    args.push(options);
-    options = undefined;
+  let argOptions = args.pop();
+  if (Array.isArray(argOptions)) {
+    args.push(argOptions);
+    argOptions = undefined;
   }
+
+  const options: Required<SamplerOptions> = Object.assign({}, DEFAULT_OPTIONS, argOptions);
 
   if (args.length > 2) {
     return { ok: false, error: "Invalid args" };
@@ -56,7 +69,7 @@ export function tryCreateWeightedSampler<T>(...args: any[]): CreateWeightedSampl
     return { ok: false, error: "Length inconsistency" };
   }
 
-  if (rawWeights.some((w) => !Number.isFinite(w) || w < 0)) {
+  if (rawWeights.some((w) => !Number.isFinite(w) || w < 0 || (!options.allowZeroWeights && w === 0))) {
     return { ok: false, error: "Invalid weights" };
   }
 
@@ -92,7 +105,7 @@ export function tryCreateWeightedSampler<T>(...args: any[]): CreateWeightedSampl
       values,
       probabilities: new Float64Array(probabilities),
       aliases: new Uint32Array(aliases),
-      randomFn: options?.randomFn ?? Math.random,
+      randomFn: options.randomFn,
     },
   };
 }
