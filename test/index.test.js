@@ -15,17 +15,26 @@ describe("createWeightedSampler", () => {
     assert.equal(sampler.sample(), "b");
   });
 
-  test("creates a sampler from weighted value objects", () => {
+  test("creates a sampler from weighted value objects when zero weights are allowed", () => {
     const randomValues = [0, 0.999_999];
     const sampler = createWeightedSampler(
       [
         { value: "never", weight: 0 },
         { value: "always", weight: 1 },
       ],
-      { randomFn: () => randomValues.shift() },
+      { allowZeroWeights: true, randomFn: () => randomValues.shift() },
     );
 
     assert.equal(sampler.sample(), "always");
+    assert.equal(sampler.sample(), "always");
+  });
+
+  test("creates a sampler from separate values and weights when zero weights are allowed", () => {
+    const sampler = createWeightedSampler(["never", "always"], [0, 1], {
+      allowZeroWeights: true,
+      randomFn: () => 0,
+    });
+
     assert.equal(sampler.sample(), "always");
   });
 
@@ -34,6 +43,13 @@ describe("createWeightedSampler", () => {
       () => createWeightedSampler(["a"], [1, 2]),
       (error) =>
         error instanceof CreateWeightedSamplerError && error.message === "Length inconsistency",
+    );
+  });
+
+  test("throws the public error type when zero weights are disallowed", () => {
+    assert.throws(
+      () => createWeightedSampler(["never", "always"], [0, 1], { allowZeroWeights: false }),
+      (error) => error instanceof CreateWeightedSamplerError && error.message === "Invalid weights",
     );
   });
 
